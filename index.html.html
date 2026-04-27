@@ -671,6 +671,7 @@ var newCharger  = { model:"", serial:"", location:"", myState:"", state:"Online"
 var editCharger = null;
 var clFilterState="", clFilterType="", clFilterMY="";
 var ovSearchJob="";
+var jbSearchCompleted="";
 var engLoadPeriod = "all";
 var newWHItem   = { name:"", sku:"", qty:"", unit:"pcs", category:"", condition:"New", location:"", notes:"", direction:"In" };
 
@@ -1273,10 +1274,19 @@ function viewJobBoard(){
   var html='<div style="display:flex;flex-direction:column;gap:20px" class="fade-up">';
   groups.forEach(function(g){
     if(!g.show)return;
-    var gj=JOBS.filter(function(j){return g.statuses.includes(j.status);});
+    var isCompleted=g.statuses.includes("Completed");
+    var allGj=JOBS.filter(function(j){return g.statuses.includes(j.status);});
+    var q=isCompleted?jbSearchCompleted.trim().toLowerCase():"";
+    var gj=q?allGj.filter(function(j){return j.customer&&j.customer.toLowerCase().indexOf(q)!==-1;}):allGj;
     var showA=currentRole==="LEAD"&&g.statuses.includes("Logged");
-    html+='<div class="card" style="border-top:3px solid '+g.bc+'"><div style="display:flex;align-items:center;gap:8px;margin-bottom:16px"><span style="font-size:14px;font-weight:800">'+g.label+'</span><span style="background:#F1F5F9;color:#64748B;padding:1px 9px;border-radius:12px;font-size:12px;font-weight:600">'+gj.length+'</span></div>';
-    if(gj.length===0){html+='<p style="color:#CBD5E1;font-size:13px;padding:10px 0">No jobs here.</p></div>';return;}
+    var badge=q?gj.length+'/'+allGj.length:allGj.length;
+    html+='<div class="card" style="border-top:3px solid '+g.bc+'">';
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">';
+    html+='<div style="display:flex;align-items:center;gap:8px"><span style="font-size:14px;font-weight:800">'+g.label+'</span><span style="background:#F1F5F9;color:#64748B;padding:1px 9px;border-radius:12px;font-size:12px;font-weight:600">'+badge+'</span></div>';
+    if(isCompleted)html+='<input id="jb-search-completed" class="form-input" style="width:220px;font-size:12.5px;padding:7px 11px" placeholder="🔍 Search site name…" value="'+esc(jbSearchCompleted)+'" oninput="var p=this.selectionStart;jbSearchCompleted=this.value;renderView();var si=document.getElementById(\'jb-search-completed\');if(si){si.focus();si.setSelectionRange(p,p);}">';
+    html+='</div>';
+    if(allGj.length===0){html+='<p style="color:#CBD5E1;font-size:13px;padding:10px 0">No jobs here.</p></div>';return;}
+    if(gj.length===0){html+='<p style="color:#CBD5E1;font-size:13px;padding:10px 0">No completed jobs match "<em>'+esc(jbSearchCompleted)+'</em>".</p></div>';return;}
     html+='<div style="overflow-x:auto"><table><thead><tr><th>Job ID</th><th>Company</th><th>Customer</th><th>Priority</th><th>Status</th><th>Assigned To</th><th>Date</th><th>'+(showA?"Action":"Duration")+'</th></tr></thead><tbody>';
     gj.forEach(function(j){
       html+='<tr class="tr-hover" onclick="openModal(\''+j.id+'\')"><td>'+jid(j.id)+'</td><td>'+cobadge(j.company)+'</td><td style="font-weight:600">'+esc(j.customer)+'</td><td>'+pbadge(j.priority)+'</td><td>'+sbadge(j.status)+'</td><td style="color:#64748B">'+(j.assignedTo||'<span style="color:#CBD5E1">—</span>')+'</td><td style="color:#94A3B8;font-size:12px">'+fmtDate(j.createdAt)+'</td><td onclick="event.stopPropagation()">'+(showA?'<button class="btn btn-blue btn-sm" onclick="openModal(\''+j.id+'\')">Assign →</button>':'<span style="color:#94A3B8">'+fmtDur(j.duration)+'</span>')+'</td></tr>';
