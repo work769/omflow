@@ -2209,7 +2209,6 @@ function warehouseSummaryCard(){
   // Only show for Team Lead, Management and Warehouse roles
   if(currentRole==="LOG_ISSUE"||currentRole==="ENGINEER")return"";
   var total=WAREHOUSE_ITEMS.length;
-  var lowStock=WAREHOUSE_ITEMS.filter(function(i){return (parseFloat(i.qty)||0)<=WH_LOW_STOCK&&(parseFloat(i.qty)||0)>0;}).length;
   var outOfStock=WAREHOUSE_ITEMS.filter(function(i){return (parseFloat(i.qty)||0)===0;}).length;
   var h='<div class="card" style="margin-top:20px;border-top:3px solid #0891B2">';
   h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">';
@@ -2224,11 +2223,10 @@ function warehouseSummaryCard(){
     var inCount=WAREHOUSE_ITEMS.filter(function(i){return (i.direction||"In")==="In";}).length;
     var outCount=WAREHOUSE_ITEMS.filter(function(i){return i.direction==="Out";}).length;
     // KPI strip
-    h+='<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px">';
+    h+='<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px">';
     [{label:"Total Items",val:total,color:"#0891B2",bg:"#ECFEFF"},
      {label:"📥 Incoming",val:inCount,color:"#059669",bg:"#ECFDF5"},
      {label:"📤 Outgoing",val:outCount,color:"#DC2626",bg:"#FEF2F2"},
-     {label:"Low Stock",val:lowStock,color:"#D97706",bg:"#FFFBEB"},
      {label:"Out of Stock",val:outOfStock,color:"#DC2626",bg:"#FEF2F2"},
      {label:"Categories",val:(function(){var s={};WAREHOUSE_ITEMS.forEach(function(i){s[i.category]=1;});return Object.keys(s).length;})(),color:"#7C3AED",bg:"#F5F3FF"}
     ].forEach(function(k){
@@ -2238,10 +2236,8 @@ function warehouseSummaryCard(){
         +'</div>';
     });
     h+='</div>';
-    // Recent / low stock items
-    var alertItems=WAREHOUSE_ITEMS.filter(function(i){return (parseFloat(i.qty)||0)<=WH_LOW_STOCK;}).slice(0,5);
-    var showItems=alertItems.length>0?alertItems:WAREHOUSE_ITEMS.slice(0,5);
-    if(alertItems.length>0)h+='<div style="font-size:11px;color:#D97706;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">⚠️ Low Stock / Out of Stock</div>';
+    // Recent items
+    var showItems=WAREHOUSE_ITEMS.slice(0,5);
     h+='<div style="overflow-x:auto"><table><thead><tr><th>ID</th><th>Item Name</th><th>S/N</th><th>Category</th><th>Qty</th><th>Condition</th><th>Direction</th><th>WH Timing</th><th>Location</th></tr></thead><tbody>';
     showItems.forEach(function(i){
       h+='<tr class="tr-hover" onclick="navigate(\'warehouse\')">'
@@ -2271,19 +2267,17 @@ function viewWarehouse(){
   var html='<div class="fade-up">';
   var now2=new Date();
   var total=WAREHOUSE_ITEMS.length;
-  var lowStock=WAREHOUSE_ITEMS.filter(function(i){return (parseFloat(i.qty)||0)>0&&(parseFloat(i.qty)||0)<=WH_LOW_STOCK;}).length;
   var outOfStock=WAREHOUSE_ITEMS.filter(function(i){return (parseFloat(i.qty)||0)===0;}).length;
   var cats={};WAREHOUSE_ITEMS.forEach(function(i){cats[i.category]=(cats[i.category]||0)+1;});
   var inCount=WAREHOUSE_ITEMS.filter(function(i){return (i.direction||"In")==="In";}).length;
   var outCount=WAREHOUSE_ITEMS.filter(function(i){return i.direction==="Out";}).length;
 
   // KPI row
-  html+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:14px;margin-bottom:22px">';
+  html+='<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:22px">';
   [{label:"Total Items",val:total,color:"#0891B2",bg:"#ECFEFF",ico:"📦"},
    {label:"📥 Incoming",val:inCount,color:"#059669",bg:"#ECFDF5",ico:""},
    {label:"📤 Outgoing",val:outCount,color:"#DC2626",bg:"#FEF2F2",ico:""},
-   {label:"In Stock",val:WAREHOUSE_ITEMS.filter(function(i){return (parseFloat(i.qty)||0)>WH_LOW_STOCK;}).length,color:"#059669",bg:"#ECFDF5",ico:"✅"},
-   {label:"Low Stock",val:lowStock,color:"#D97706",bg:"#FFFBEB",ico:"⚠️"},
+   {label:"In Stock",val:WAREHOUSE_ITEMS.filter(function(i){return (parseFloat(i.qty)||0)>0;}).length,color:"#059669",bg:"#ECFDF5",ico:"✅"},
    {label:"Out of Stock",val:outOfStock,color:"#DC2626",bg:"#FEF2F2",ico:"⛔"},
    {label:"Categories",val:Object.keys(cats).length,color:"#7C3AED",bg:"#F5F3FF",ico:"🗂️"}
   ].forEach(function(k){
@@ -2339,7 +2333,7 @@ function viewWarehouse(){
     +'<datalist id="wh-f-cat-list">'+WH_CATEGORIES.map(function(c){return'<option value="'+c+'"/>';}).join("")+'</datalist>'
     +'<select class="form-select" id="wh-f-cond" style="width:120px;font-size:12px" onchange="renderView()"><option value="">All Conditions</option>'+WH_CONDITIONS.map(function(c){return'<option>'+c+'</option>';}).join("")+'</select>'
     +'<select class="form-select" id="wh-f-dir" style="width:130px;font-size:12px" onchange="renderView()"><option value="">All Directions</option><option value="In">📥 Incoming</option><option value="Out">📤 Outgoing</option></select>'
-    +'<select class="form-select" id="wh-f-stock" style="width:130px;font-size:12px" onchange="renderView()"><option value="">All Stock Levels</option><option value="ok">In Stock</option><option value="low">Low Stock</option><option value="out">Out of Stock</option></select>'
+    +'<select class="form-select" id="wh-f-stock" style="width:130px;font-size:12px" onchange="renderView()"><option value="">All Stock Levels</option><option value="ok">In Stock</option><option value="out">Out of Stock</option></select>'
     +'</div></div>';
 
   if(total===0){
@@ -2355,7 +2349,7 @@ function viewWarehouse(){
     var fDir=fDirEl?fDirEl.value:"";
     var filtered=WAREHOUSE_ITEMS.filter(function(i){
       var q=parseFloat(i.qty)||0;
-      var stockOk=!fStock||(fStock==="ok"&&q>WH_LOW_STOCK)||(fStock==="low"&&q>0&&q<=WH_LOW_STOCK)||(fStock==="out"&&q===0);
+      var stockOk=!fStock||(fStock==="ok"&&q>0)||(fStock==="out"&&q===0);
       var catOk=!fCat||(i.category||"").toLowerCase().indexOf(fCat)!==-1;
       var dirOk=!fDir||(i.direction||"In")===fDir;
       return catOk&&(!fCond||i.condition===fCond)&&stockOk&&dirOk;
