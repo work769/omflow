@@ -669,6 +669,7 @@ var editForm    = { workDone:"", issueCategory:"Hardware", chargerBrand:"", seri
 var newIssue    = { customer:"", location:"", description:"", priority:"Medium", company:"" };
 var newCharger  = { model:"", serial:"", location:"", myState:"", state:"Online", company:"", type:"AC", warrantyStart:"", warrantyExpiry:"" };
 var editCharger = null;
+var clFilterState="", clFilterType="", clFilterMY="";
 var engLoadPeriod = "all";
 var newWHItem   = { name:"", sku:"", qty:"", unit:"pcs", category:"", condition:"New", location:"", notes:"", direction:"In" };
 
@@ -1852,25 +1853,19 @@ function viewChargerList(){
   html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">';
   html+='<div class="sec-title" style="margin:0">Chargers ('+CHARGERS.length+')</div>';
   html+='<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
-    +'<select class="form-select" id="cl-filter-state" style="width:130px;font-size:12px" onchange="renderView()">'
-    +'<option value="">All States</option>'+CHARGER_STATES.map(function(s){return'<option>'+s+'</option>';}).join("")+'</select>'
-    +'<select class="form-select" id="cl-filter-type" style="width:100px;font-size:12px" onchange="renderView()">'
-    +'<option value="">All Types</option>'+CHARGER_TYPES.map(function(t){return'<option>'+t+'</option>';}).join("")+'</select>'
-    +'<select class="form-select" id="cl-filter-mystate" style="width:130px;font-size:12px" onchange="renderView()">'
-    +'<option value="">All MY States</option>'+MY_STATES.map(function(s){return'<option>'+s+'</option>';}).join("")+'</select>'
+    +'<select class="form-select" id="cl-filter-state" style="width:130px;font-size:12px" onchange="clFilterState=this.value;renderView()">'
+    +'<option value=""'+(clFilterState===''?' selected':'')+'>All States</option>'+CHARGER_STATES.map(function(s){return'<option'+(clFilterState===s?' selected':'')+'>'+s+'</option>';}).join("")+'</select>'
+    +'<select class="form-select" id="cl-filter-type" style="width:100px;font-size:12px" onchange="clFilterType=this.value;renderView()">'
+    +'<option value=""'+(clFilterType===''?' selected':'')+'>All Types</option>'+CHARGER_TYPES.map(function(t){return'<option'+(clFilterType===t?' selected':'')+'>'+t+'</option>';}).join("")+'</select>'
+    +'<select class="form-select" id="cl-filter-mystate" style="width:130px;font-size:12px" onchange="clFilterMY=this.value;renderView()">'
+    +'<option value=""'+(clFilterMY===''?' selected':'')+'>All MY States</option>'+MY_STATES.map(function(s){return'<option'+(clFilterMY===s?' selected':'')+'>'+s+'</option>';}).join("")+'</select>'
     +'</div></div>';
 
   if(CHARGERS.length===0){
     html+='<div class="empty-state"><div class="empty-icon">🔌</div><div class="empty-title">No chargers registered yet</div><div class="empty-sub">'+(canEdit?"Use the form above to add your first charger.":"Contact your Team Lead to register chargers.")+'</div></div>';
   } else {
-    var fsEl=document.getElementById("cl-filter-state");
-    var ftEl=document.getElementById("cl-filter-type");
-    var fMYEl=document.getElementById("cl-filter-mystate");
-    var fState=fsEl?fsEl.value:"";
-    var fType=ftEl?ftEl.value:"";
-    var fMY=fMYEl?fMYEl.value:"";
     var filtered=CHARGERS.filter(function(c){
-      return(!fState||c.state===fState)&&(!fType||c.type===fType)&&(!fMY||c.myState===fMY);
+      return(!clFilterState||c.state===clFilterState)&&(!clFilterType||c.type===clFilterType)&&(!clFilterMY||c.myState===clFilterMY);
     });
     if(filtered.length===0){
       html+='<p style="color:#CBD5E1;font-size:13px;padding:20px 0;text-align:center">No chargers match the current filters.</p>';
