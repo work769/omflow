@@ -670,6 +670,7 @@ var newIssue    = { customer:"", location:"", description:"", priority:"Medium",
 var newCharger  = { model:"", serial:"", location:"", myState:"", state:"Online", company:"", type:"AC", warrantyStart:"", warrantyExpiry:"" };
 var editCharger = null;
 var clFilterState="", clFilterType="", clFilterMY="";
+var ovSearchJob="";
 var engLoadPeriod = "all";
 var newWHItem   = { name:"", sku:"", qty:"", unit:"pcs", category:"", condition:"New", location:"", notes:"", direction:"In" };
 
@@ -1095,9 +1096,19 @@ function viewOverview(){
     +'<div class="card">'+engWorkloadH+'</div>'
     +'<div class="card"><div class="sec-title">Issue Categories</div>'+(ip.length>0?pieChart(ip,"name","value",180):'<p style="color:#CBD5E1;font-size:13px;text-align:center;padding:30px 0">No completed jobs yet</p>')+'</div></div>';
 
+  var jobSearchQ=ovSearchJob.trim().toLowerCase();
+  var jobsToShow=jobSearchQ
+    ?JOBS.filter(function(j){return j.customer&&j.customer.toLowerCase().indexOf(jobSearchQ)!==-1;})
+    :JOBS.slice(0,8);
   var tableH=JOBS.length===0?emptyCard("📋","No jobs yet","Start by switching to Log Issue and submitting the first issue."):
-    '<div class="card"><div class="sec-title">Recent Jobs</div><div style="overflow-x:auto"><table><thead><tr><th>Job ID</th><th>Company</th><th>Customer</th><th>Priority</th><th>Status</th><th>Assigned To</th><th>Date</th></tr></thead><tbody>'
-    +JOBS.slice(0,8).map(function(j){return'<tr class="tr-hover" onclick="openModal(\''+j.id+'\')"><td>'+jid(j.id)+'</td><td>'+cobadge(j.company)+'</td><td style="font-weight:600">'+esc(j.customer)+'</td><td>'+pbadge(j.priority)+'</td><td>'+sbadge(j.status)+'</td><td style="color:#64748B">'+(j.assignedTo||'<span style="color:#CBD5E1">Unassigned</span>')+'</td><td style="color:#94A3B8;font-size:12px">'+fmtDate(j.createdAt)+'</td></tr>';}).join("")
+    '<div class="card">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">'
+    +'<div class="sec-title" style="margin:0">Recent Jobs'+(jobSearchQ?' <span style="font-size:11px;color:#0055FF;font-weight:600">('+jobsToShow.length+' match'+(jobsToShow.length!==1?'es':'')+')</span>':'')+'</div>'
+    +'<input id="ov-job-search" class="form-input" style="width:220px;font-size:12.5px;padding:7px 11px" placeholder="🔍 Search site name…" value="'+esc(ovSearchJob)+'" oninput="var p=this.selectionStart;ovSearchJob=this.value;renderView();var si=document.getElementById(\'ov-job-search\');if(si){si.focus();si.setSelectionRange(p,p);}">'
+    +'</div>'
+    +'<div style="overflow-x:auto"><table><thead><tr><th>Job ID</th><th>Company</th><th>Customer / Site</th><th>Priority</th><th>Status</th><th>Assigned To</th><th>Date</th></tr></thead><tbody>'
+    +(jobsToShow.length===0?'<tr><td colspan="7" style="text-align:center;color:#CBD5E1;padding:24px;font-size:13px">No jobs match "'+esc(ovSearchJob)+'".</td></tr>'
+      :jobsToShow.map(function(j){return'<tr class="tr-hover" onclick="openModal(\''+j.id+'\')"><td>'+jid(j.id)+'</td><td>'+cobadge(j.company)+'</td><td style="font-weight:600">'+esc(j.customer)+'</td><td>'+pbadge(j.priority)+'</td><td>'+sbadge(j.status)+'</td><td style="color:#64748B">'+(j.assignedTo||'<span style="color:#CBD5E1">Unassigned</span>')+'</td><td style="color:#94A3B8;font-size:12px">'+fmtDate(j.createdAt)+'</td></tr>';}).join(""))
     +'</tbody></table></div></div>';
   return'<div class="fade-up">'+kpiH+chargerH+chartH+tableH+warehouseSummaryCard()+'</div>';
 }
