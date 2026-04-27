@@ -1546,7 +1546,7 @@ function photoUploadSection(inputId, formObj, previewId){
 function renderModal(){
   var j=JOBS.find(function(x){return x.id===selJob;});if(!j)return;
   var needsReport=j.clockOut&&!j.workDone&&currentRole==="ENGINEER";
-  var canEdit=j.status==="Completed"&&currentRole==="ENGINEER"&&j.assignedTo===currentUser;
+  var canEdit=j.status==="Completed"&&(currentRole==="LEAD"||currentRole==="MANAGEMENT"||(currentRole==="ENGINEER"&&j.assignedTo===currentUser));
   var isEditing=canEdit&&selJob&&window._editingReport===j.id;
 
   function dr(l,v){if(!v)return"";return'<div><div class="detail-lbl">'+l+'</div><div class="detail-val">'+esc(v)+'</div></div>';}
