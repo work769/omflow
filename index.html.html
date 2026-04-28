@@ -1409,7 +1409,25 @@ function viewInsights(){
     var rc=resP>=70?"#059669":resP>=40?"#D97706":"#DC2626";
     html+='<tr class="tr-hover"><td style="font-weight:700">'+esc(eng)+'</td><td style="color:'+rc+';font-weight:700">'+(ej.length>0?resP+"%":"—")+'</td><td style="color:#64748B">'+fmtDur(avg)+'</td><td style="color:#0055FF;font-weight:600">'+(totalMins>0?fmtDur(totalMins):"—")+'</td><td style="font-weight:600;color:'+(ea.length>2?"#DC2626":ea.length>0?"#D97706":"#059669")+'">'+ea.length+'</td><td style="color:#64748B">'+topC+'</td><td>'+tag(over?"⚠ Overloaded":"✓ Balanced",over?"#DC2626":"#059669")+'</td></tr>';
   });
-  return html+'</tbody></table></div></div>'+warehouseSummaryCard()+'</div>';
+  html+='</tbody></table></div></div>';
+  var now=new Date();var kpiY=now.getFullYear();var kpiM=now.getMonth();
+  var mnLabel=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][kpiM]+" "+kpiY;
+  html+='<div class="card"><div class="sec-title">🎯 Engineer KPI — '+mnLabel+'</div>';
+  html+='<p style="font-size:12.5px;color:#64748B;margin:0 0 16px">Monthly work time target: <strong>90 hrs</strong>. Travel time excluded.</p>';
+  html+='<div style="overflow-x:auto"><table><thead><tr><th>Engineer</th><th>Work Hours This Month</th><th>KPI Status</th></tr></thead><tbody>';
+  TEAM.engineers.forEach(function(eng){
+    var mj=JOBS.filter(function(j){if(j.assignedTo!==eng||j.status!=="Completed"||!j.clockOut)return false;var d=new Date(j.clockOut);return d.getFullYear()===kpiY&&d.getMonth()===kpiM;});
+    var tm=mj.reduce(function(a,j){return a+(j.duration||0);},0);
+    var hs=(tm/60).toFixed(1);
+    var ks,kc;
+    if(tm>5400){ks="EXCEED";kc="#DC2626";}
+    else if(tm>=4800){ks="EXPECTED";kc="#059669";}
+    else{ks="UNDER";kc="#D97706";}
+    html+='<tr class="tr-hover"><td style="font-weight:700">'+esc(eng)+'</td><td style="color:#0055FF;font-weight:600">'+hs+' hrs</td><td>'+tag(ks,kc)+'</td></tr>';
+  });
+  if(TEAM.engineers.length===0)html+='<tr><td colspan="3" style="text-align:center;color:#CBD5E1;padding:24px">No engineers in system.</td></tr>';
+  html+='</tbody></table></div></div>';
+  return html+warehouseSummaryCard()+'</div>';
 }
 
 function viewSettings(){
